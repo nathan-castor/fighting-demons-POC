@@ -1,0 +1,44 @@
+/*
+ * Fighting Demons Color Scheme
+ * Based on the style guide from short_explanation.txt
+ */
+
+:root {
+    /* Primary Colors */
+    --primary: #7B61FF;
+    /* spiritual purple */
+    --secondary: #34C759;
+    /* positive green */
+    --warning: #FF6B6B;
+    /* demon red */
+    --background: #F5F7FA;
+    /* serene white */
+    --accent: #FFD93D;
+    /* spirit gold */
+    --text: #2C3E50;
+    /* deep wisdom */
+
+    /* Additional UI Colors */
+    --primary-light: #9D8BFF;
+    --primary-dark: #5A46CC;
+    --secondary-light: #6EE89D;
+    --secondary-dark: #28A347;
+    --warning-light: #FF9E9E;
+    --warning-dark: #D84848;
+    --background-dark: #1E1E3C;
+    --background-darker: #0F0F1A;
+    --text-light: #546E7A;
+    --text-lighter: #B8B8D0;
+
+    /* Gradients */
+    --primary-gradient: linear-gradient(45deg, var(--primary), var(--primary-light));
+    --secondary-gradient: linear-gradient(45deg, var(--secondary), var(--secondary-light));
+    --warning-gradient: linear-gradient(45deg, var(--warning), var(--warning-light));
+    --title-gradient: linear-gradient(45deg, #f8f8f8, var(--primary-light));
+}
+
+/* Dark Theme Overrides (current app uses dark theme) */
+body {
+    background-color: var(--background-darker);
+    color: white;
+}
