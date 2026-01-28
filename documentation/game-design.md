@@ -53,13 +53,21 @@ Your Spirit Guide is your companion, mentor, and mirror. It reflects your spirit
 
 ### Evolution Stages
 
-| Stage | Name | Appearance | Points Required |
-|-------|------|------------|-----------------|
-| 1 | **Ember** | Faint flickering wisp, barely visible, like a candle about to go out | 0 (starting) |
-| 2 | **Shade** | Translucent humanoid form, features unclear, voice a whisper | 200 |
-| 3 | **Specter** | Solid ghostly form, glowing eyes, gentle luminous aura | 500 |
-| 4 | **Guardian** | Full radiant humanoid figure, hints of wings or halo, warm presence | 1,000 |
-| 5 | **Seraph** | Brilliant, powerful, intricate sacred geometry patterns, commanding voice | 2,000 |
+The progression is designed for **fast early wins** — your first evolution happens on Day 2 to hook you on visible results. Later stages require more dedication.
+
+| Stage | Name | Icon | Points | Approx. Day | Description |
+|-------|------|------|--------|-------------|-------------|
+| 1 | **Ember** | 🕯️ | 0 | Start | A faint flicker, barely holding on |
+| 2 | **Shade** | 👻 | 44 | Day 2 | Growing more defined, gaining form |
+| 3 | **Specter** | ✨ | 100 | Day 5 | Radiant and strong, a true presence |
+| 4 | **Wraith** | 🌟 | 200 | Day 9 | A force of ethereal power |
+| 5 | **Guardian** | 🛡️ | 400 | Day 18 | A powerful protector, shield of light |
+| 6 | **Sentinel** | ⚔️ | 700 | Day 32 | Warrior of the light, blade drawn |
+| 7 | **Seraph** | 👼 | 1,200 | Day 55 | Transcendent being of pure radiance |
+| 8 | **Radiant** | ☀️ | 2,000 | Day 91 | Blazing with divine light |
+| 9 | **Ascendant** | 🔱 | 3,500 | Day 159 | Beyond mortal comprehension |
+
+Each evolution triggers a **celebration animation** with a personal message from the Spirit Guide about their transformation.
 
 ### Regression
 
@@ -72,6 +80,41 @@ Your Spirit Guide is your companion, mentor, and mirror. It reflects your spirit
 - Name your Spirit Guide
 - Choose masculine/feminine/neutral presentation
 - Unlock cosmetic variations through achievements
+
+---
+
+## User Titles
+
+Separate from the Spirit Guide, YOU earn titles as you accumulate points. These represent your rank in the battle against the demons.
+
+| Title | Points Required | Description |
+|-------|-----------------|-------------|
+| **Initiate** | 0 | Beginning the journey |
+| **Acolyte** | 50 | Learning the ways of light |
+| **Warrior** | 150 | Proven in battle |
+| **Knight of Light** | 350 | Sworn defender against darkness |
+| **Champion** | 600 | Victor of countless face-offs |
+| **Crusader** | 1,000 | Marching ever forward in holy purpose |
+| **Paladin** | 1,800 | Master of body and spirit |
+| **Lightbringer** | 3,000 | Bearer of the sacred flame |
+| **Ascended** | 5,000 | Beyond mortal limits |
+
+---
+
+## Achievement Badges
+
+Achievements reward specific milestones and behaviors. Some are visible from the start; others are secret until unlocked.
+
+### Categories
+
+| Category | Examples |
+|----------|----------|
+| **Milestones** | First Light (first face-off), Perfect Day (all 3 in one day), Thousand Strong (1000 pts) |
+| **Streaks** | Kindling (3-day), Week Warrior (7-day), Centurion (100-day) |
+| **Strength** | Iron Will (first PR), Century Club (100 pushups), Gravity Defier (50 pullups) |
+| **Endurance** | Trailblazer (10 miles), Road Warrior (50 miles), Pilgrim (500 miles - secret!) |
+| **Mindfulness** | Still Mind (100 min meditation), Inner Peace (500 min), Enlightened (1000 min) |
+| **Secret** | Early Bird (dawn before 5am), Night Owl (dusk after 11pm), The Comeback (complete after 3 defers) |
 
 ---
 
@@ -363,35 +406,45 @@ The app is a **Progressive Web App** that can be installed on phones:
 
 ## Roadmap
 
-### Phase 1: Core Loop (Current)
+### Phase 1: Core Loop ✅ COMPLETE
 
 - [x] User creation/authentication (local)
 - [x] Basic point tracking
-- [x] Face-off system skeleton
-- [ ] Morning Stand-Off interaction flow
-- [ ] Life Force scoring system
+- [x] Face-off system (Dawn/Noon/Dusk)
+- [x] Morning Stand-Off interaction flow
+- [x] Life Force scoring system
+- [x] Spirit Guide visual stages (emoji placeholders)
+- [x] Android app via Capacitor
+- [x] Push notifications for face-off reminders
+
+### Phase 2: Progression System ✅ COMPLETE
+
+- [x] Spirit Guide evolution (9 stages)
+- [x] Evolution celebration animations
+- [x] User titles/ranks system
+- [x] Achievement badges (25+)
+- [x] Lifetime stats tracking
+- [x] Dashboard with tabs (Records/Lifetime/Badges)
+- [x] Full wisdom teaching library (60+ entries)
+- [x] Meditation timer integration
+
+### Phase 3: Polish & Expansion (In Progress)
+
+- [ ] User avatar/profile picture
+- [ ] Lore unlock system (wisdom unlocked at milestones)
 - [ ] Stagnation penalties
 - [ ] Death/rebirth mechanic
-- [ ] Spirit Guide visual stages (placeholder art)
-- [ ] PWA manifest for mobile install
+- [ ] Weekly/monthly progress summaries
+- [ ] Custom Spirit Guide artwork (replace emoji)
+- [ ] Sound effects and haptic feedback
 
-### Phase 2: Polish & Depth
+### Phase 4: Future
 
-- [ ] Full wisdom teaching library (50+ entries)
-- [ ] Meditation timer integration
-- [ ] All Face-Off category flows
-- [ ] User notes/journal system
-- [ ] Streak visualization
-- [ ] Spirit Guide evolution animations
-
-### Phase 3: Expansion
-
-- [ ] Custom goals (user-defined essentials)
-- [ ] Cloud sync/accounts
+- [ ] Cloud sync/accounts (Supabase)
+- [ ] Voice interaction with Spirit Guide
 - [ ] Social features (accountability partners)
 - [ ] Advanced analytics (pattern recognition)
 - [ ] Audio: Spirit Guide voice lines
-- [ ] Art: Full Spirit Guide evolution illustrations
 
 ---
 
@@ -439,5 +492,5 @@ Unlike Habitica (gamification without soul), Headspace (meditation without stake
 
 ---
 
-*Last updated: [Date]*
-*Version: 0.2 — Expanded design with Spirit Guide evolution, Life Force system, Morning Stand-Off flow*
+*Last updated: Jan 28, 2026*
+*Version: 0.3 — Added 9-stage Spirit Guide evolution, User Titles, 25+ Achievement Badges, Lifetime Stats, Evolution Celebrations*

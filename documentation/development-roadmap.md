@@ -1,31 +1,37 @@
 # Fighting Demons — Development Roadmap
 
-> **Last Updated:** Jan 27, 2026
+> **Last Updated:** Jan 28, 2026
 > **Purpose:** Track progress across Cursor AI, Browser Claude, and personal todos
 
 ---
 
-## 🚀 Current State (Jan 27, 2026)
+## 🚀 Current State (Jan 28, 2026)
 
 ### ✅ What's Working
 | Component | Status | Notes |
 |-----------|--------|-------|
-| IntroAnimation | ✅ Working | 6-step lore intro with Framer Motion |
+| IntroAnimation | ✅ Enhanced | 11-step lore intro with Spirit Guide showcase and evolution preview |
 | UserAuth | ✅ Basic | Name-only registration (localStorage) |
-| Dashboard | ✅ Working | Shows 3 Face-Off cards (Dawn/Noon/Dusk), Spirit Guide, PRs |
-| FaceOff | ✅ Working | Full stepped flow: Greeting → Activity → Meditation → Lore → Summary |
-| LocalStorageService | ✅ Working | Handles all data persistence locally |
-| **Android App** | ✅ NEW | Capacitor setup complete, runs on phone! |
-| Local Notifications | 🔌 Installed | Plugin added, not yet implemented |
+| Dashboard | ✅ Enhanced | 3 Face-Off cards, Spirit Guide with evolution progress, user title, tabs for Records/Lifetime/Badges |
+| FaceOff | ✅ Enhanced | Full flow with Spirit Guide display, evolution celebrations |
+| EvolutionCelebration | ✅ NEW | Animated modal when Spirit Guide evolves |
+| LocalStorageService | ✅ Enhanced | Handles data + achievements + lifetime stats |
+| NotificationService | ✅ Working | Daily notifications at 6am/12pm/6pm, deferred reminders |
+| gameConfig | ✅ NEW | Central config for all progression (stages, titles, badges) |
+| **Android App** | ✅ Working | Capacitor setup complete, notifications working |
+| **Achievements** | ✅ NEW | 25+ badges across 6 categories |
+| **Lifetime Stats** | ✅ NEW | Total miles, pushups, pullups, meditation tracked |
 
 ### ⚠️ Not Yet Implemented
 | Feature | Priority | Notes |
 |---------|----------|-------|
 | Supabase Integration | Medium | Currently all localStorage |
-| Push Notifications | High | Plugin installed, need to schedule Dawn/Noon/Dusk reminders |
+| User Avatar | Medium | Profile picture/emoji picker |
+| Lore Unlocks | Medium | Wisdom entries unlock at milestones |
 | Custom App Icon | Medium | Using default icon currently |
-| Spirit Guide Animations | Medium | Emoji placeholders, need real artwork |
+| Spirit Guide Artwork | Medium | Emoji placeholders, need real artwork |
 | Sound Effects | Low | Silent currently |
+| Stagnation Penalties | Medium | Life force drain on missed days |
 
 ---
 
@@ -53,35 +59,40 @@ npx cap open android    # Open in Android Studio
 ## 🎯 Immediate TODOs
 
 ### High Priority
-- [ ] **Implement notifications** — Schedule reminders for Dawn (6am), Noon (12pm), Dusk (6pm)
-- [ ] **Fix intro flow** — Ensure first-time users see full intro on mobile
+- [x] ~~**Implement notifications**~~ ✅ Done! Reminders for Dawn (6am), Noon (12pm), Dusk (6pm)
+- [x] ~~**Fix intro flow**~~ ✅ Enhanced to 11 steps with Spirit Guide showcase
 - [ ] **Add custom app icon** — Replace default Android icon
 - [ ] **Add splash screen** — Branded loading screen
 
 ### Medium Priority
+- [ ] **User avatar** — Profile picture or emoji picker
+- [ ] **Lore unlock system** — Wisdom entries unlock at milestones (config exists, UI needed)
 - [ ] **Connect Supabase** — Real data persistence across devices
 - [ ] **Spirit Guide artwork** — Commission or create SVG/Lottie animations
 - [ ] **Haptic feedback** — Vibrate on completions and demon encounters
-- [ ] **Offline sync** — Queue actions when offline, sync when online
 
 ### Low Priority (Polish)
 - [ ] Sound effects for interactions
 - [ ] Particle effects (embers, glow)
-- [ ] Streak tracking and celebrations
+- [ ] Weekly/monthly progress summaries
 - [ ] Share progress feature
 
 ---
 
 ## 🎨 Animation & Visual Roadmap
 
-### Spirit Guide Evolution Stages
+### Spirit Guide Evolution Stages (Updated)
 | Stage | Points | Current | Target |
 |-------|--------|---------|--------|
-| Ember | 0-199 | 🕯️ | Flickering flame SVG with particle embers |
-| Shade | 200-499 | 👻 | Ethereal figure with wispy edges |
-| Specter | 500-999 | ✨ | Glowing entity with subtle aura |
-| Guardian | 1000-1999 | 🛡️ | Armored spirit with protective stance |
-| Seraph | 2000+ | 🌟 | Radiant winged being |
+| Ember | 0 | 🕯️ | Flickering flame SVG with particle embers |
+| Shade | 44 | 👻 | Ethereal figure with wispy edges |
+| Specter | 100 | ✨ | Glowing entity with subtle aura |
+| Wraith | 200 | 🌟 | Ethereal force with trailing effects |
+| Guardian | 400 | 🛡️ | Armored spirit with protective stance |
+| Sentinel | 700 | ⚔️ | Warrior spirit with blade |
+| Seraph | 1,200 | 👼 | Radiant winged being |
+| Radiant | 2,000 | ☀️ | Blazing sun entity |
+| Ascendant | 3,500 | 🔱 | Transcendent being with sacred geometry |
 
 ### Animation Technologies
 - **Lottie** — For complex character animations (exported from After Effects)
@@ -102,8 +113,10 @@ npx cap open android    # Open in Android Studio
 
 ### Current: localStorage Only
 ```
-fighting-demons-user        → User profile, PRs, points
+fighting-demons-user        → User profile, PRs, points, lifetime stats
 fighting-demons-daily-records → Daily completions
+fighting-demons-achievements  → Unlocked achievement IDs with timestamps
+fighting-demons-lore-unlocks  → Unlocked lore entry IDs
 fighting-demons-version     → Cache versioning
 fighting-demons-seen-intro  → Intro flag
 ```
@@ -128,16 +141,20 @@ fighting-demons-seen-intro  → Intro flag
 src/
 ├── components/
 │   ├── ActivityTracker/    ← Legacy, may deprecate
-│   ├── Dashboard/          ← Main hub with 3 Face-Off cards
-│   ├── FaceOff/            ← Core interaction (greeting → activity → meditation → lore → summary)
+│   ├── Dashboard/          ← Main hub: Face-Off cards, stats tabs, badges
+│   ├── EvolutionCelebration/ ← NEW: Animated evolution modal
+│   ├── FaceOff/            ← Core interaction with Spirit Guide
 │   │   ├── FaceOff.js
 │   │   ├── FaceOff.css
-│   │   └── loreData.js     ← 45+ wisdom fragments
-│   ├── IntroAnimation/     ← First-time user experience
+│   │   └── loreData.js     ← 60+ wisdom fragments
+│   ├── IntroAnimation/     ← 11-step onboarding with Spirit Guide showcase
 │   ├── MorningStandOff/    ← Legacy, replaced by FaceOff
 │   └── UserAuth/           ← Name registration
+├── config/
+│   └── gameConfig.js       ← NEW: Central config for stages, titles, badges, lore
 ├── services/
-│   ├── LocalStorageService.js  ← All data operations
+│   ├── LocalStorageService.js  ← Data + achievements + stats calculator
+│   ├── NotificationService.js  ← Push notification scheduling
 │   └── SupabaseService.js      ← Created but not actively used
 ├── hooks/
 │   └── useAuth.js              ← Empty (auth simplified to localStorage)
@@ -146,6 +163,7 @@ src/
 
 android/                        ← Capacitor Android project
 capacitor.config.ts            ← Capacitor configuration
+documentation/                  ← Game design docs
 ```
 
 ---
@@ -180,11 +198,21 @@ location.reload();
 
 ## 📝 Session Log
 
+### Jan 28, 2026 (Cursor AI) — MAJOR UPDATE
+- ✅ Fixed Android notifications (permissions, scheduling, test button)
+- ✅ Enhanced intro to 11 steps with Spirit Guide and world lore
+- ✅ Created central gameConfig.js with 9 Spirit Guide stages
+- ✅ Added User Titles system (Initiate → Ascended)
+- ✅ Built 25+ achievement badges across 6 categories
+- ✅ Added lifetime stats tracking (miles, pushups, pullups, meditation)
+- ✅ Created EvolutionCelebration component with animated modal
+- ✅ Updated Dashboard with tabs (Records/Lifetime/Badges)
+- ✅ Added evolution progress ring and next evolution hint
+
 ### Jan 27, 2026 (Cursor AI)
 - ✅ Set up Capacitor for Android
 - ✅ Built and ran app on Samsung Galaxy S25 Ultra
 - ✅ Added @capacitor/local-notifications plugin
-- ⏳ Next: Implement notification scheduling, custom app icon
 
 ### Jan 11, 2026 (Previous Session)
 - Created MorningStandOff component
@@ -195,32 +223,45 @@ location.reload();
 
 ## 🐛 Known Issues
 
-- [ ] Intro may be skipped on fresh mobile install (version check race condition?)
 - [ ] useAuth.js hook is empty (auth handled directly in App.js)
 - [ ] No real authentication (anyone can enter any name)
 - [ ] Data lost if user clears app storage
 - [ ] MorningStandOff component exists but unused (replaced by FaceOff)
+- [ ] ActivityTracker component is legacy and unused
 
 ---
 
 ## 💡 Feature Ideas (Brainstorm)
 
-- **Daily Demon Encounters** — Random temptation scenarios with choices
+- **Voice Interaction** — Talk to Spirit Guide (long-term goal)
 - **Wisdom Journal** — Save favorite lore fragments
 - **Progress Photos** — Optional visual progress tracking
 - **Accountability Partner** — Share streaks with a friend
 - **Leaderboard** — Compare with other users (requires Supabase)
 - **Custom Meditation Audio** — Ambient sounds during timer
 - **Widget** — Android home screen widget showing today's status
+- **Weekly Summaries** — End-of-week progress recap with Spirit Guide commentary
 
 ---
 
 ## ⚙️ Settings & Debug (In-App)
 
-Dashboard has a Settings (⚙️) button with:
+Dashboard has a Settings (⚙️) button with three tabs:
+
+**Account Tab:**
+- View profile info and Spirit Guide stage
 - Replay Intro Animation
-- Full Reset (clear all data)
-- Debug info (user ID, profile status)
+
+**Notifications Tab:**
+- Enable/disable push notifications
+- Send test notification (for debugging)
+- Check pending notifications
+
+**Dev Tools Tab:**
+- Export/import data (JSON backup)
+- Data summary (days tracked, points)
+- New profile / Fresh start / Full reset options
+- Debug info (user ID, platform, version)
 
 ---
 

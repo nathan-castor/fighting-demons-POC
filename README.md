@@ -1,70 +1,86 @@
-# Getting Started with Create React App
+# Fighting Demons
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+> A gamified self-improvement app where users wage spiritual warfare against inner demons through daily rituals, guided by an evolving Spirit companion.
 
-## Available Scripts
+## Overview
 
-In the project directory, you can run:
+Fighting Demons is a React-based mobile app (via Capacitor) that transforms daily exercise and meditation into epic spiritual battles. Complete three daily "Face-Offs" at Dawn, Noon, and Dusk to earn Life Force, evolve your Spirit Guide, and unlock achievements.
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Core Gameplay
+- **Three Daily Face-Offs**: Dawn (1 mile walk/run), Noon (max pushups), Dusk (max pullups)
+- **10-minute meditation** after each physical activity
+- **Spirit Guide** that evolves as you progress (9 stages from Ember to Ascendant)
+- **User Titles** that increase with experience (Initiate → Knight of Light → Ascended)
+- **25+ Achievement Badges** across 6 categories
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Progression System
+- **Fast early progression**: First evolution on Day 2 to hook you on results
+- **Evolution celebrations**: Beautiful animated modal when Spirit Guide evolves
+- **Lifetime stats**: Track total miles, pushups, pullups, meditation minutes
+- **Dashboard tabs**: Records / Lifetime Stats / Badges
 
-### `npm test`
+### Notifications
+- Daily reminders for Dawn (6am), Noon (12pm), and Dusk (6pm) Face-Offs
+- Deferred notification when you postpone a Face-Off
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Tech Stack
 
-### `npm run build`
+- **Frontend**: React 19, Framer Motion
+- **Mobile**: Capacitor 8 (Android)
+- **Storage**: localStorage (Supabase ready)
+- **Notifications**: @capacitor/local-notifications
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Development
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Web Development
+```bash
+npm start                    # Start dev server (localhost:3000)
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Android Development
+```bash
+npm run build               # Build production React
+npx cap sync android        # Sync to Android project
+npx cap open android        # Open Android Studio
+# Then click Run ▶️ in Android Studio
+```
 
-### `npm run eject`
+### After Code Changes
+```bash
+npm run build && npx cap sync android
+# Then run from Android Studio
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Project Structure
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```
+src/
+├── components/
+│   ├── Dashboard/          ← Main hub with Face-Off cards, stats, badges
+│   ├── FaceOff/            ← Core interaction flow
+│   ├── EvolutionCelebration/ ← Spirit Guide evolution animation
+│   ├── IntroAnimation/     ← 11-step onboarding experience
+│   └── UserAuth/           ← Name registration
+├── config/
+│   └── gameConfig.js       ← Central progression config (stages, titles, badges)
+├── services/
+│   ├── LocalStorageService.js  ← Data persistence + stats calculator
+│   └── NotificationService.js  ← Push notification scheduling
+└── styles/
+    └── colors.css          ← CSS variables for theming
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+android/                    ← Capacitor Android project
+capacitor.config.ts         ← Capacitor configuration
+documentation/              ← Game design docs
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Documentation
 
-## Learn More
+- [Game Design Document](documentation/game-design.md) - Full game design and lore
+- [Development Roadmap](documentation/development-roadmap.md) - Current status and todos
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## License
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Private project - All rights reserved
