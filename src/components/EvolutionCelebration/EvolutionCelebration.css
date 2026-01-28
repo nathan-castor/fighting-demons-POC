@@ -1,0 +1,231 @@
+/* Evolution Celebration Modal */
+.evolution-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(10, 10, 30, 0.98) 0%, rgba(30, 20, 60, 0.98) 100%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.evolution-container {
+  width: 100%;
+  max-width: 500px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+/* Particles */
+.evolution-particles {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.8), transparent);
+  border-radius: 50%;
+}
+
+/* Evolution Visual */
+.evolution-visual {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.stage-display {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stage-icon {
+  font-size: 5rem;
+  filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
+}
+
+.stage-icon.evolved {
+  font-size: 6rem;
+}
+
+.stage-name {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-weight: 600;
+}
+
+.stage-name.evolved {
+  color: #ffd700;
+  font-size: 1.5rem;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+/* Transformation Energy */
+.transformation-energy {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.energy-ring {
+  position: absolute;
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  border-radius: 50%;
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+
+.ring-1 {
+  width: 100%;
+  height: 100%;
+  animation-delay: 0s;
+}
+
+.ring-2 {
+  width: 130%;
+  height: 130%;
+  animation-delay: 0.2s;
+}
+
+.ring-3 {
+  width: 160%;
+  height: 160%;
+  animation-delay: 0.4s;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Header */
+.evolution-header {
+  margin-bottom: 1.5rem;
+}
+
+.evolution-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: 8px;
+  background: linear-gradient(135deg, #ffd700, #ffaa00, #ffd700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+}
+
+.evolution-subtitle {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 0.5rem;
+}
+
+/* Message */
+.evolution-message {
+  max-width: 400px;
+  padding: 1.5rem;
+  background: rgba(255, 215, 0, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 12px;
+  margin: 1rem 0;
+}
+
+.guide-message {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: #ffd700;
+  font-style: italic;
+  margin: 0;
+}
+
+.message-attribution {
+  display: block;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: rgba(255, 215, 0, 0.6);
+}
+
+/* Continue Button */
+.evolution-continue-btn {
+  background: linear-gradient(135deg, #7B61FF, #5D4DBE);
+  color: white;
+  border: none;
+  padding: 1rem 3rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 30px;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 20px rgba(123, 97, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.evolution-continue-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px rgba(123, 97, 255, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .evolution-container {
+    padding: 1.5rem;
+  }
+
+  .evolution-title {
+    font-size: 2rem;
+    letter-spacing: 5px;
+  }
+
+  .stage-icon {
+    font-size: 4rem;
+  }
+
+  .stage-icon.evolved {
+    font-size: 5rem;
+  }
+
+  .guide-message {
+    font-size: 1rem;
+  }
+
+  .evolution-continue-btn {
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+  }
+}

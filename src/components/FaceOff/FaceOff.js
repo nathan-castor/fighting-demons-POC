@@ -1,292 +1,624 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { faceOffStorage, userStorage } from '../../services/LocalStorageService';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { userStorage, dailyRecordStorage } from '../../services/LocalStorageService';
+import { scheduleDeferredNotification } from '../../services/NotificationService';
+import { 
+  getSpiritGuideStage, 
+  checkEvolution
+} from '../../config/gameConfig';
+import EvolutionCelebration from '../EvolutionCelebration/EvolutionCelebration';
+import {
+  GREETINGS,
+  ACTIVITY_INSTRUCTIONS,
+  DEFER_MESSAGES,
+  MEDITATION_PROMPT,
+  COMPLETION_MESSAGES,
+  PR_MESSAGE,
+  getRandomLore
+} from './loreData';
 import './FaceOff.css';
 
-// Decision trees for each category
-const decisionTrees = {
-  walk: {
-    question: "Have you started your day?",
-    yes: {
-      question: "Do you have time to walk a mile?",
-      yes: {
-        question: "Will you choose to walk?",
-        yes: {
-          outcome: "win",
-          message: "You chose to walk! You've earned a point in your battle against the demons."
-        },
-        no: {
-          outcome: "lose",
-          message: "You chose not to walk. The demons grow stronger."
-        }
-      },
-      no: {
-        question: "Can you schedule time later today?",
-        yes: {
-          outcome: "neutral",
-          message: "Good planning! Remember to follow through later."
-        },
-        no: {
-          outcome: "lose",
-          message: "The demons win this round. Try to make time for your health tomorrow."
-        }
-      }
-    },
-    no: {
-      question: "Will you commit to walking when you start your day?",
-      yes: {
-        outcome: "neutral",
-        message: "Good intention! Remember to follow through when you start your day."
-      },
-      no: {
-        outcome: "lose",
-        message: "The demons are pleased with your lack of commitment."
-      }
-    }
-  },
-  
-  alcohol: {
-    question: "Are you considering having a drink?",
-    yes: {
-      question: "Have you already had alcohol today?",
-      yes: {
-        question: "Will you choose to have another drink?",
-        yes: {
-          outcome: "lose",
-          message: "You chose to have another drink. The demons grow stronger."
-        },
-        no: {
-          outcome: "win",
-          message: "You chose moderation! You've earned a point in your battle against the demons."
-        }
-      },
-      no: {
-        question: "Is it a special occasion?",
-        yes: {
-          outcome: "neutral",
-          message: "Enjoying in moderation is okay. Just be mindful."
-        },
-        no: {
-          question: "Will you choose to skip the drink?",
-          yes: {
-            outcome: "win",
-            message: "You chose to skip the drink! You've earned a point in your battle."
-          },
-          no: {
-            outcome: "lose",
-            message: "The demons win this round. Try to be more mindful next time."
-          }
-        }
-      }
-    },
-    no: {
-      outcome: "win",
-      message: "You're not even tempted! You've earned a point in your battle against the demons."
-    }
-  },
-  
-  stretch: {
-    question: "Have you been sitting for more than an hour?",
-    yes: {
-      question: "Do you feel any stiffness or discomfort?",
-      yes: {
-        question: "Will you take a break to stretch?",
-        yes: {
-          outcome: "win",
-          message: "You chose to stretch! You've earned a point in your battle against the demons."
-        },
-        no: {
-          outcome: "lose",
-          message: "You chose to remain stiff. The demons grow stronger."
-        }
-      },
-      no: {
-        question: "Will you still take a quick stretch break?",
-        yes: {
-          outcome: "win",
-          message: "Proactive stretching! You've earned a point in your battle."
-        },
-        no: {
-          outcome: "lose",
-          message: "The demons win this round. Your body will thank you for stretching next time."
-        }
-      }
-    },
-    no: {
-      question: "Have you stretched at all today?",
-      yes: {
-        outcome: "win",
-        message: "You're already taking care of yourself! You've earned a point."
-      },
-      no: {
-        question: "Will you do a quick stretch now?",
-        yes: {
-          outcome: "win",
-          message: "Proactive stretching! You've earned a point in your battle."
-        },
-        no: {
-          outcome: "lose",
-          message: "The demons win this round. Remember to take care of your body."
-        }
-      }
-    }
-  }
+// Points configuration per face-off type
+const POINTS = {
+  dawn: 10,  // Mile + meditation
+  noon: 6,   // Pushups + meditation
+  dusk: 6    // Pullups + meditation
 };
 
-const FaceOff = ({ category, onComplete }) => {
-  const [currentNode, setCurrentNode] = useState(null);
-  const [decisionPath, setDecisionPath] = useState([]);
-  const [result, setResult] = useState(null);
-  const [animation, setAnimation] = useState('fadeIn');
+const FaceOff = ({ faceOffType: propType, onComplete }) => {
+  const navigate = useNavigate();
+  const { type: routeType } = useParams();
+  const faceOffType = propType || routeType || 'dawn';
 
-  // Initialize with the root node of the selected category
+  // Get current Spirit Guide stage
+  const user = userStorage.getUser();
+  const spiritGuide = getSpiritGuideStage(user?.totalPoints || 0);
+
+  // Evolution celebration state
+  const [showEvolution, setShowEvolution] = useState(false);
+  const [evolutionData, setEvolutionData] = useState({ fromStage: null, toStage: null });
+
+  // State management
+  const [currentStep, setCurrentStep] = useState('greeting');
+  const [stepHistory, setStepHistory] = useState([]); // Track navigation history for back button
+  const [activityCompleted, setActivityCompleted] = useState(false);
+  const [activityValue, setActivityValue] = useState('');
+  const [meditationCompleted, setMeditationCompleted] = useState(false);
+  const [meditationTimeRemaining, setMeditationTimeRemaining] = useState(600); // 10 minutes in seconds
+  const [meditationActive, setMeditationActive] = useState(false);
+  const [deferReason, setDeferReason] = useState('');
+  const [isPR, setIsPR] = useState(false);
+  const [displayedLoreIndex, setDisplayedLoreIndex] = useState(0);
+
+  // Navigate to a step and track history
+  const goToStep = (step) => {
+    setStepHistory(prev => [...prev, currentStep]);
+    setCurrentStep(step);
+  };
+
+  // Go back to previous step
+  const goBack = () => {
+    if (stepHistory.length > 0) {
+      const previousStep = stepHistory[stepHistory.length - 1];
+      setStepHistory(prev => prev.slice(0, -1));
+      setCurrentStep(previousStep);
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
+  // Check if back button should be shown
+  const canGoBack = currentStep !== 'greeting' && currentStep !== 'summary';
+
+  // Select random lore on mount
+  const selectedLore = useMemo(() => getRandomLore(), []);
+
+  // Animation variants
+  const stepVariants = {
+    initial: { opacity: 0, y: 30 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -30 }
+  };
+
+  // Typewriter effect for lore
   useEffect(() => {
-    if (category && decisionTrees[category]) {
-      setCurrentNode(decisionTrees[category]);
-      setDecisionPath([]);
-      setResult(null);
+    if (currentStep === 'lore' && displayedLoreIndex < selectedLore.length) {
+      const timer = setTimeout(() => {
+        setDisplayedLoreIndex(prev => prev + 1);
+      }, 40); // 40ms per character
+      return () => clearTimeout(timer);
     }
-  }, [category]);
+  }, [currentStep, displayedLoreIndex, selectedLore]);
 
-  // Handle user's choice (yes/no)
-  const handleChoice = (choice) => {
-    // Add to decision path
-    const newPath = [...decisionPath, choice];
-    setDecisionPath(newPath);
-    
-    // Animate transition
-    setAnimation('fadeOut');
-    
-    setTimeout(() => {
-      // Navigate to next node based on choice
-      const nextNode = currentNode[choice.toLowerCase()];
-      
-      if (nextNode) {
-        if (nextNode.outcome) {
-          // We've reached a leaf node with an outcome
-          setResult({
-            outcome: nextNode.outcome,
-            message: nextNode.message
-          });
-          
-          // Record the face-off result
-          const userWon = nextNode.outcome === 'win';
-          const pointsImpact = 1; // Default point value
-          
-          if (nextNode.outcome !== 'neutral') {
-            faceOffStorage.createFaceOff(category, newPath, userWon, pointsImpact);
-          }
-        } else {
-          // Continue to next question
-          setCurrentNode(nextNode);
-        }
-      }
-      
-      setAnimation('fadeIn');
-    }, 300); // Match this with CSS transition time
+  // Meditation timer
+  useEffect(() => {
+    let interval;
+    if (meditationActive && meditationTimeRemaining > 0) {
+      interval = setInterval(() => {
+        setMeditationTimeRemaining(prev => prev - 1);
+      }, 1000);
+    } else if (meditationTimeRemaining === 0) {
+      setMeditationActive(false);
+    }
+    return () => clearInterval(interval);
+  }, [meditationActive, meditationTimeRemaining]);
+
+  // Format time for display
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Handle completing the face-off
-  const handleComplete = () => {
+  // Get activity label based on type
+  const getActivityLabel = () => {
+    switch (faceOffType) {
+      case 'dawn': return 'Mile Walk/Run';
+      case 'noon': return 'Pushups';
+      case 'dusk': return 'Pullups';
+      default: return 'Activity';
+    }
+  };
+
+  // Calculate deferred time (now + 1 hour)
+  const getDeferredTime = () => {
+    const deferredTime = new Date();
+    deferredTime.setHours(deferredTime.getHours() + 1);
+    return deferredTime.toISOString();
+  };
+
+  // Handle "Yes, I'm ready" click
+  const handleReady = () => {
+    goToStep('activity');
+  };
+
+  // Handle "Not yet" click
+  const handleDefer = () => {
+    goToStep('defer');
+  };
+
+  // Handle defer submission
+  const handleDeferSubmit = async () => {
+    const dailyRecord = dailyRecordStorage.getTodayRecord();
+    const deferKey = `${faceOffType}DeferredUntil`;
+
+    dailyRecordStorage.saveDailyRecord({
+      ...dailyRecord,
+      [deferKey]: getDeferredTime(),
+      [`${faceOffType}DeferReason`]: deferReason || null
+    });
+
+    // Schedule a notification reminder for 1 hour from now
+    await scheduleDeferredNotification(faceOffType);
+
+    // Return to dashboard
     if (onComplete) {
-      onComplete();
+      onComplete({ deferred: true });
+    } else {
+      navigate('/dashboard');
     }
   };
 
-  if (!currentNode) {
-    return <div className="face-off-loading">Loading face-off...</div>;
-  }
+  // Handle activity completion
+  const handleActivityComplete = () => {
+    // For dawn (mile), just mark complete
+    if (faceOffType === 'dawn') {
+      setActivityCompleted(true);
+      goToStep('meditation');
+      return;
+    }
 
+    // For noon/dusk, validate and check PR
+    const count = parseInt(activityValue, 10);
+    if (isNaN(count) || count < 0) {
+      return; // Don't proceed with invalid input
+    }
+
+    setActivityCompleted(true);
+
+    // Check for PR
+    const user = userStorage.getUser();
+    const prKey = faceOffType === 'noon' ? 'pushupPR' : 'pullupPR';
+    const currentPR = user?.[prKey] || 0;
+
+    if (count > currentPR) {
+      setIsPR(true);
+      userStorage.saveUser({
+        ...user,
+        [prKey]: count
+      });
+    }
+
+    goToStep('meditation');
+  };
+
+  // Handle starting meditation timer
+  const handleStartMeditation = () => {
+    setMeditationActive(true);
+    goToStep('meditationTimer');
+  };
+
+  // Handle meditation complete
+  const handleMeditationComplete = () => {
+    setMeditationCompleted(true);
+    setDisplayedLoreIndex(0); // Reset for typewriter effect
+    goToStep('lore');
+  };
+
+  // Handle lore continue
+  const handleLoreContinue = () => {
+    goToStep('summary');
+  };
+
+  // Handle final completion
+  const handleFinalComplete = useCallback(() => {
+    const currentUser = userStorage.getUser();
+    const dailyRecord = dailyRecordStorage.getTodayRecord();
+    const oldPoints = currentUser?.totalPoints || 0;
+
+    // Update daily record
+    const updates = {
+      [`${faceOffType}Completed`]: true
+    };
+
+    // Add specific data based on type
+    if (faceOffType === 'dawn') {
+      updates.mileCompleted = true;
+    } else if (faceOffType === 'noon') {
+      updates.pushupCount = parseInt(activityValue, 10) || 0;
+    } else if (faceOffType === 'dusk') {
+      updates.pullupCount = parseInt(activityValue, 10) || 0;
+    }
+
+    // Add meditation minutes
+    updates.meditationMinutes = (dailyRecord.meditationMinutes || 0) + 10;
+
+    dailyRecordStorage.saveDailyRecord({
+      ...dailyRecord,
+      ...updates
+    });
+
+    // Award points
+    const pointsEarned = POINTS[faceOffType] + (isPR ? 5 : 0);
+    const newLifeForce = (currentUser?.lifeForce || 100) + pointsEarned;
+    const newTotalPoints = oldPoints + pointsEarned;
+
+    // Update lifetime stats
+    const lifetimeUpdates = {
+      totalMeditationMinutes: (currentUser?.totalMeditationMinutes || 0) + 10,
+      totalFaceOffsCompleted: (currentUser?.totalFaceOffsCompleted || 0) + 1
+    };
+
+    if (faceOffType === 'dawn') {
+      lifetimeUpdates.totalMiles = (currentUser?.totalMiles || 0) + 1;
+    } else if (faceOffType === 'noon') {
+      lifetimeUpdates.totalPushups = (currentUser?.totalPushups || 0) + (parseInt(activityValue, 10) || 0);
+    } else if (faceOffType === 'dusk') {
+      lifetimeUpdates.totalPullups = (currentUser?.totalPullups || 0) + (parseInt(activityValue, 10) || 0);
+    }
+
+    userStorage.saveUser({
+      ...currentUser,
+      lifeForce: newLifeForce,
+      totalPoints: newTotalPoints,
+      ...lifetimeUpdates
+    });
+
+    // Check for Spirit Guide evolution
+    const evolutionResult = checkEvolution(oldPoints, newTotalPoints);
+    if (evolutionResult.evolved) {
+      setEvolutionData({
+        fromStage: evolutionResult.fromStage,
+        toStage: evolutionResult.toStage
+      });
+      setShowEvolution(true);
+      return; // Don't navigate yet - wait for evolution celebration
+    }
+
+    // Navigate to dashboard
+    if (onComplete) {
+      onComplete({
+        completed: true,
+        pointsEarned,
+        isPR,
+        activityValue: activityValue ? parseInt(activityValue, 10) : null
+      });
+    } else {
+      navigate('/dashboard');
+    }
+  }, [faceOffType, activityValue, isPR, onComplete, navigate]);
+
+  // Handle evolution celebration complete
+  const handleEvolutionComplete = useCallback(() => {
+    setShowEvolution(false);
+    if (onComplete) {
+      onComplete({ completed: true, evolved: true });
+    } else {
+      navigate('/dashboard');
+    }
+  }, [onComplete, navigate]);
+
+  // Render current step
+  const renderStep = () => {
+    switch (currentStep) {
+      case 'greeting':
   return (
-    <div className="face-off">
-      {!result ? (
-        <motion.div 
-          className={`question-container ${animation}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <h3 className="question">{currentNode.question}</h3>
-          
-          <div className="choice-buttons">
-            <motion.button 
-              className="choice-button yes"
-              onClick={() => handleChoice('Yes')}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Yes
-            </motion.button>
-            
-            <motion.button 
-              className="choice-button no"
-              onClick={() => handleChoice('No')}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              No
-            </motion.button>
+        <motion.div
+            key="greeting"
+            className="face-off-step"
+            variants={stepVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.5 }}
+          >
+            <div className="spirit-guide-container">
+              <div className="spirit-guide-glow"></div>
+              <div className="spirit-guide-icon spirit-guide-emoji">{spiritGuide.icon}</div>
+              <div className="spirit-guide-stage-name">{spiritGuide.name}</div>
+            </div>
+
+            <p className="spirit-guide-text">{GREETINGS[faceOffType]}</p>
+
+            <div className="button-group">
+              <button className="primary-button" onClick={handleReady}>
+                Yes, I'm ready
+              </button>
+              <button className="secondary-button" onClick={handleDefer}>
+                Not yet
+              </button>
+            </div>
+          </motion.div>
+        );
+
+      case 'defer':
+        return (
+          <motion.div
+            key="defer"
+            className="face-off-step"
+            variants={stepVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.5 }}
+          >
+            <div className="spirit-guide-container">
+              <div className="spirit-guide-glow dim"></div>
+              <div className="spirit-guide-icon spirit-guide-emoji dim">{spiritGuide.icon}</div>
+            </div>
+
+            <p className="spirit-guide-text">{DEFER_MESSAGES[faceOffType]}</p>
+
+            <div className="defer-input-container">
+              <label className="defer-label">What prevents you? (optional)</label>
+              <textarea
+                className="defer-input"
+                placeholder="Share your reason if you wish..."
+                value={deferReason}
+                onChange={(e) => setDeferReason(e.target.value)}
+                rows={3}
+              />
           </div>
-          
-          {decisionPath.length > 0 && (
-            <div className="decision-path">
-              <h4>Your path so far:</h4>
-              <ul>
-                {decisionPath.map((decision, index) => (
-                  <li key={index}>
-                    <strong>Q:</strong> {getQuestionAtIndex(index)}
-                    <br />
-                    <strong>A:</strong> {decision}
-                  </li>
-                ))}
-              </ul>
+
+            <button className="primary-button" onClick={handleDeferSubmit}>
+              Set Reminder
+            </button>
+          </motion.div>
+        );
+
+      case 'activity':
+        return (
+          <motion.div
+            key="activity"
+            className="face-off-step"
+            variants={stepVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.5 }}
+          >
+            <div className="activity-icon-container">
+              {faceOffType === 'dawn' && <span className="activity-emoji">🏃</span>}
+              {faceOffType === 'noon' && <span className="activity-emoji">💪</span>}
+              {faceOffType === 'dusk' && <span className="activity-emoji">🧗</span>}
+            </div>
+
+            <h2 className="activity-title">{getActivityLabel()}</h2>
+            <p className="spirit-guide-text">{ACTIVITY_INSTRUCTIONS[faceOffType]}</p>
+
+            {faceOffType === 'dawn' ? (
+              <button className="primary-button large" onClick={handleActivityComplete}>
+                Mark Complete
+              </button>
+            ) : (
+              <div className="count-input-container">
+                <label className="count-label">How many?</label>
+                <input
+                  type="number"
+                  className="count-input"
+                  min="0"
+                  placeholder="0"
+                  value={activityValue}
+                  onChange={(e) => setActivityValue(e.target.value)}
+                  autoFocus
+                />
+                <button
+                  className="primary-button"
+                  onClick={handleActivityComplete}
+                  disabled={activityValue === ''}
+                >
+                  Submit
+                </button>
             </div>
           )}
         </motion.div>
-      ) : (
-        <motion.div 
-          className={`result-container ${result.outcome}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+        );
+
+      case 'meditation':
+        return (
+          <motion.div
+            key="meditation"
+            className="face-off-step"
+            variants={stepVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.5 }}
+          >
+            <div className="meditation-icon">🧘</div>
+
+            <h2 className="activity-title">Meditation</h2>
+            <p className="spirit-guide-text">{MEDITATION_PROMPT}</p>
+
+            <button className="primary-button large" onClick={handleStartMeditation}>
+              Start Timer
+            </button>
+          </motion.div>
+        );
+
+      case 'meditationTimer':
+        return (
+        <motion.div
+            key="meditationTimer"
+            className="face-off-step timer-step"
+            variants={stepVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
           transition={{ duration: 0.5 }}
         >
-          <div className={`result-icon ${result.outcome}`}>
-            {result.outcome === 'win' && '✓'}
-            {result.outcome === 'lose' && '✗'}
-            {result.outcome === 'neutral' && '!'}
+            <div className={`timer-display ${meditationTimeRemaining === 0 ? 'complete' : ''}`}>
+              <span className="timer-time">{formatTime(meditationTimeRemaining)}</span>
+              {meditationActive && meditationTimeRemaining > 0 && (
+                <div className="timer-pulse"></div>
+              )}
           </div>
-          
-          <h3 className="result-title">
-            {result.outcome === 'win' && 'Victory!'}
-            {result.outcome === 'lose' && 'Defeat!'}
-            {result.outcome === 'neutral' && 'Draw!'}
-          </h3>
-          
-          <p className="result-message">{result.message}</p>
-          
-          <motion.button 
-            className="complete-button"
-            onClick={handleComplete}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+
+            {meditationTimeRemaining > 0 ? (
+              <p className="timer-instruction">Breathe. Watch. Be still.</p>
+            ) : (
+              <>
+                <p className="timer-complete-text">The silence has been kept.</p>
+                <button className="primary-button" onClick={handleMeditationComplete}>
+                  Meditation Complete
+                </button>
+              </>
+            )}
+
+            {meditationTimeRemaining > 0 && (
+              <button
+                className="skip-button"
+                onClick={handleMeditationComplete}
+              >
+                Complete Early
+              </button>
+            )}
+          </motion.div>
+        );
+
+      case 'lore':
+        return (
+          <motion.div
+            key="lore"
+            className="face-off-step lore-step"
+            variants={stepVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.5 }}
+          >
+            <div className="lore-container">
+              <div className="lore-glow"></div>
+              <blockquote className="lore-text">
+                "{selectedLore.substring(0, displayedLoreIndex)}"
+                <span className="lore-cursor">|</span>
+              </blockquote>
+            </div>
+
+            {displayedLoreIndex >= selectedLore.length && (
+          <motion.button
+                className="primary-button"
+                onClick={handleLoreContinue}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
           >
             Continue
           </motion.button>
+            )}
+          </motion.div>
+        );
+
+      case 'summary':
+        const pointsEarned = POINTS[faceOffType] + (isPR ? 5 : 0);
+        const user = userStorage.getUser();
+
+        return (
+          <motion.div
+            key="summary"
+            className="face-off-step summary-step"
+            variants={stepVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.5 }}
+          >
+            <div className="victory-icon">⚔️</div>
+
+            <h2 className="summary-title">Face-Off Complete</h2>
+            <p className="spirit-guide-text">{COMPLETION_MESSAGES[faceOffType]}</p>
+
+            <div className="points-earned">
+              <span className="points-number">+{pointsEarned}</span>
+              <span className="points-label">Life Force</span>
+            </div>
+
+            {isPR && (
+              <motion.div
+                className="pr-celebration"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200 }}
+              >
+                <span className="pr-icon">🏆</span>
+                <span className="pr-text">{PR_MESSAGE}</span>
         </motion.div>
       )}
-    </div>
-  );
-  
-  // Helper function to get the question at a specific index in the decision path
-  function getQuestionAtIndex(index) {
-    let node = decisionTrees[category];
-    for (let i = 0; i < index; i++) {
-      if (node[decisionPath[i].toLowerCase()]) {
-        node = node[decisionPath[i].toLowerCase()];
-      }
+
+            {activityValue && faceOffType !== 'dawn' && (
+              <div className="activity-summary">
+                <span>{faceOffType === 'noon' ? 'Pushups' : 'Pullups'}: </span>
+                <span className="activity-count">{activityValue}</span>
+              </div>
+            )}
+
+            <div className="total-life-force">
+              <span>Total Life Force: </span>
+              <span className="total-number">{(user?.lifeForce || 100) + pointsEarned}</span>
+            </div>
+
+            <button className="primary-button large" onClick={handleFinalComplete}>
+              Return to Dashboard
+            </button>
+          </motion.div>
+        );
+
+      default:
+        return null;
     }
-    return node.question;
-  }
+  };
+
+  // Progress indicator
+  const steps = ['greeting', 'activity', 'meditation', 'lore', 'summary'];
+  const currentStepIndex = steps.indexOf(
+    currentStep === 'defer' ? 'greeting' :
+      currentStep === 'meditationTimer' ? 'meditation' :
+        currentStep
+  );
+
+  return (
+    <>
+      <div className="face-off">
+        <div className="face-off-background">
+          <div className="ambient-glow"></div>
+        </div>
+
+        <div className="face-off-header">
+          {canGoBack && (
+            <button className="back-button" onClick={goBack} aria-label="Go back">
+              ← Back
+            </button>
+          )}
+          <span className="face-off-type">{faceOffType.toUpperCase()} FACE-OFF</span>
+          {!canGoBack && <div className="back-button-placeholder"></div>}
+        </div>
+
+        <div className="progress-indicator">
+          {steps.map((step, index) => (
+            <div
+              key={step}
+              className={`progress-dot ${index <= currentStepIndex ? 'active' : ''} ${index === currentStepIndex ? 'current' : ''}`}
+            />
+          ))}
+        </div>
+
+        <div className="face-off-content">
+          <AnimatePresence mode="wait">
+            {renderStep()}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Evolution Celebration Modal */}
+      <EvolutionCelebration
+        isVisible={showEvolution}
+        fromStage={evolutionData.fromStage}
+        toStage={evolutionData.toStage}
+        onComplete={handleEvolutionComplete}
+      />
+    </>
+  );
 };
 
 export default FaceOff;

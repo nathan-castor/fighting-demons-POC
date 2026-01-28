@@ -134,3 +134,35 @@ p {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(123, 97, 255, 0.7);
 }
+
+/* Loading screen */
+.loading-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  background-color: var(--background-darker);
+  color: white;
+}
+
+.loading-screen p {
+  color: var(--text-lighter);
+  font-size: 1.1rem;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(123, 97, 255, 0.2);
+  border-radius: 50%;
+  border-top-color: var(--primary);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -7,7 +7,7 @@ const ActivityTracker = ({ onComplete }) => {
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [activities, setActivities] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  
+
   // Activity types and their details
   const activityTypes = [
     {
@@ -18,11 +18,11 @@ const ActivityTracker = ({ onComplete }) => {
       description: 'Complete your daily mile to keep the demons at bay'
     },
     {
-      id: 'stretch',
-      name: 'Stretching',
+      id: 'meditation',
+      name: 'Meditation',
       icon: '🧘',
-      points: 1,
-      description: 'Take time to stretch your body and mind'
+      points: 5,
+      description: 'Still your mind and build the wall demons cannot cross'
     },
     {
       id: 'alcohol',
@@ -32,56 +32,56 @@ const ActivityTracker = ({ onComplete }) => {
       description: 'Resisted the temptation of drinking'
     }
   ];
-  
+
   // Load today's activities
   useEffect(() => {
     const todayActivities = activityStorage.getTodayActivities();
     setActivities(todayActivities);
   }, []);
-  
+
   // Handle selecting an activity
   const handleSelectActivity = (activity) => {
     setSelectedActivity(activity);
   };
-  
+
   // Handle completing an activity
   const handleCompleteActivity = () => {
     if (!selectedActivity) return;
-    
+
     // Check if this activity has already been completed today
     const alreadyCompleted = activities.some(
       activity => activity.type === selectedActivity.id && activity.completed
     );
-    
+
     if (alreadyCompleted && selectedActivity.id === 'walk') {
       setShowConfirmation(true);
       return;
     }
-    
+
     // Create the activity
     const newActivity = activityStorage.createActivity(
       selectedActivity.id,
       true,
       selectedActivity.points
     );
-    
+
     // Update the activities list
     setActivities([...activities, newActivity]);
-    
+
     // Show confirmation
     setShowConfirmation(true);
   };
-  
+
   // Handle closing the confirmation
   const handleCloseConfirmation = () => {
     setShowConfirmation(false);
     setSelectedActivity(null);
-    
+
     if (onComplete) {
       onComplete();
     }
   };
-  
+
   // Check if an activity has been completed today
   const isActivityCompleted = (activityId) => {
     return activities.some(
@@ -95,7 +95,7 @@ const ActivityTracker = ({ onComplete }) => {
       <p className="tracker-description">
         Complete activities to earn points in your battle against the demons
       </p>
-      
+
       {!showConfirmation ? (
         <>
           <div className="activity-grid">
@@ -111,7 +111,7 @@ const ActivityTracker = ({ onComplete }) => {
                 <h3>{activity.name}</h3>
                 <p>{activity.description}</p>
                 <div className="activity-points">+{activity.points} points</div>
-                
+
                 {isActivityCompleted(activity.id) && (
                   <div className="completed-badge">
                     <span className="checkmark">✓</span>
@@ -121,7 +121,7 @@ const ActivityTracker = ({ onComplete }) => {
               </motion.div>
             ))}
           </div>
-          
+
           {selectedActivity && (
             <motion.div
               className="activity-actions"
@@ -132,7 +132,7 @@ const ActivityTracker = ({ onComplete }) => {
               <p>
                 <strong>{selectedActivity.name}</strong> - {selectedActivity.description}
               </p>
-              
+
               <button
                 className="complete-activity-button"
                 onClick={handleCompleteActivity}
@@ -141,7 +141,7 @@ const ActivityTracker = ({ onComplete }) => {
                   ? 'Record Again'
                   : 'Complete Activity'}
               </button>
-              
+
               <button
                 className="cancel-button"
                 onClick={() => setSelectedActivity(null)}

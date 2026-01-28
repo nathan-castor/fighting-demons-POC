@@ -8,47 +8,43 @@ const UserAuth = () => {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [error, setError] = useState('');
-  const [isRegistering, setIsRegistering] = useState(true);
 
-  // Check if user already exists
+  // Redirect if already has user
   useEffect(() => {
-    const existingUser = userStorage.getUser();
-    if (existingUser) {
+    const user = userStorage.getUser();
+    if (user) {
       navigate('/dashboard');
     }
   }, [navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+    setError('');
+
+    // Validation
     if (!name.trim()) {
       setError('Please enter your name');
       return;
     }
-    
-    if (isRegistering) {
-      // Create a new user
-      userStorage.createUser(name);
-      navigate('/dashboard');
-    } else {
-      // Login logic - for now just check if name exists
-      const existingUser = userStorage.getUser();
-      if (existingUser && existingUser.name.toLowerCase() === name.toLowerCase()) {
-        navigate('/dashboard');
-      } else {
-        setError('User not found. Please register first.');
-      }
+
+    if (name.trim().length < 2) {
+      setError('Name must be at least 2 characters');
+      return;
     }
+
+    // Create user
+    userStorage.createUser(name.trim());
+    navigate('/dashboard');
   };
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
-      transition: { 
+      transition: {
         duration: 0.5,
         when: "beforeChildren",
-        staggerChildren: 0.2
+        staggerChildren: 0.15
       }
     }
   };
@@ -60,44 +56,45 @@ const UserAuth = () => {
 
   return (
     <div className="user-auth">
-      <motion.div 
+      <motion.div
         className="auth-container"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <motion.h1 
+        <motion.div className="spirit-guide-greeting" variants={itemVariants}>
+          <span className="guide-icon">✦</span>
+        </motion.div>
+
+        <motion.h1
           className="auth-title"
           variants={itemVariants}
         >
-          {isRegistering ? 'Begin Your Journey' : 'Welcome Back'}
+          What Is Your Name?
         </motion.h1>
-        
-        <motion.p 
+
+        <motion.p
           className="auth-subtitle"
           variants={itemVariants}
         >
-          {isRegistering 
-            ? 'Enter your name to start fighting demons' 
-            : 'Enter your name to continue your battle'}
+          The Spirit Guide must know who it protects.
         </motion.p>
-        
+
         {error && (
-          <motion.div 
+          <motion.div
             className="auth-error"
             variants={itemVariants}
           >
             {error}
           </motion.div>
         )}
-        
-        <motion.form 
+
+        <motion.form
           onSubmit={handleSubmit}
           variants={itemVariants}
           className="auth-form"
         >
           <div className="form-group">
-            <label htmlFor="name">Your Name</label>
             <input
               type="text"
               id="name"
@@ -105,40 +102,27 @@ const UserAuth = () => {
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name"
               autoFocus
+              autoComplete="off"
             />
           </div>
-          
-          <motion.button 
+
+          <motion.button
             type="submit"
             className="auth-button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            {isRegistering ? 'Start Your Journey' : 'Continue Journey'}
+            Begin
           </motion.button>
         </motion.form>
-        
-        <motion.div 
-          className="auth-toggle"
-          variants={itemVariants}
-        >
-          <p>
-            {isRegistering 
-              ? 'Already have a journey?' 
-              : 'Need to start a new journey?'}
-          </p>
-          <button 
-            onClick={() => setIsRegistering(!isRegistering)}
-            className="toggle-button"
-          >
-            {isRegistering ? 'Login Instead' : 'Register Instead'}
-          </button>
-        </motion.div>
+
+        <motion.p className="auth-note" variants={itemVariants}>
+          Your data is stored locally on this device.
+        </motion.p>
       </motion.div>
-      
+
       <div className="auth-background">
-        <div className="light-beam"></div>
-        <div className="demon-silhouette"></div>
+        <div className="ambient-glow"></div>
       </div>
     </div>
   );
